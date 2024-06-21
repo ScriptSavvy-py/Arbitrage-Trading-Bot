@@ -1,0 +1,80 @@
+import ccxt
+import time
+
+# Define your exchanges with API keys
+exchanges = {
+    'binance': ccxt.binance({
+        'apiKey': 'your_binance_api_key',
+        'secret': 'your_binance_secret_key'
+    }),
+    'kraken': ccxt.kraken({
+        'apiKey': 'your_kraken_api_key',
+        'secret': 'your_kraken_secret_key'
+    }),
+}
+
+# Define the list of trading pairs you want to arbitrage
+trading_pairs = ['BTC/USDT', 'ETH/USDT', 'ETH/BTC']  # Add more pairs as needed
+
+def fetch_prices():
+    prices = {}
+    for name, exchange in exchanges.items():
+        for pair in trading_pairs:
+            try:
+                ticker = exchange.fetch_ticker(pair)
+                prices[f"{name}_{pair}"] = ticker['last']
+            except Exception as e:
+                print(f"Error fetching {pair} price from {name}: {e}")
+    return prices
+
+def detect_arbitrage(prices):
+    arbitrage_opportunities = []
+    
+    for pair in trading_pairs:
+        binance_price = prices[f"binance_{pair}"]
+        kraken_price = prices[f"kraken_{pair}"]
+        
+        if binance_price < kraken_price:
+            profit = kraken_price - binance_price
+            arbitrage_opportunities.append(('binance', 'kraken', pair, profit))
+        elif kraken_price < binance_price:
+            profit = binance_price - kraken_price
+            arbitrage_opportunities.append(('kraken', 'binance', pair, profit))
+    
+    return arbitrage_opportunities
+
+def execute_trade(buy_exchange, sell_exchange, pair, amount):
+    try:
+        buy_order = exchanges[buy_exchange].create_market_buy_order(pair, amount)
+        sell_order = exchanges[sell_exchange].create_market_sell_order(pair, amount)
+        return buy_order, sell_order
+    except Exception as e:
+        print(f"Error executing trade between {buy_exchange} and {sell_exchange} for {pair}: {e}")
+        return None, None
+
+def main():
+    amount = 0.01  # Example amount
+    while True:
+        try:
+            prices = fetch_prices()
+            print(prices)
+            
+            opportunities = detect_arbitrage(prices)
+            if opportunities:
+                for opportunity in opportunities:
+                    buy_exchange, sell_exchange, pair, profit = opportunity
+                    buy_order, sell_order = execute_trade(buy_exchange, sell_exchange, pair, amount)
+                    if buy_order and sell_order:
+                        print(f"Executed trades: Buy {pair} on {buy_exchange}, sell on {sell_exchange}, profit: {profit}")
+            
+            time.sleep(5)
+        
+        except ccxt.BaseError as e:
+            print(f"CCXT Error occurred: {e}")
+            time.sleep(10)  # Wait a bit longer before retrying on CCXT error
+        except Exception as e:
+            print(f"Unexpected error occurred: {e}")
+            time.sleep(10)  # Wait a bit longer before retrying on unexpected error
+
+if __name__ == "__main__":
+    main()
