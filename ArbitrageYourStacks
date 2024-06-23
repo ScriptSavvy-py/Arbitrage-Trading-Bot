@@ -3,7 +3,7 @@ import time
 
 # Define your exchanges with API keys
 exchanges = {
-    'binance': ccxt.binance({
+    'binance': ccxt.binanceus({
         'apiKey': 'your_binance_api_key',
         'secret': 'your_binance_secret_key'
     }),
@@ -14,8 +14,25 @@ exchanges = {
 }
 
 # Define the list of trading pairs you want to arbitrage
-trading_pairs = ['pairs = [    "BTC/USDT",    "ETH/USDT",    "SOL/USDT",    "USDC/USDT",    "FET/USDT",    "DOGE/USDT",    "XRP/USDT",    "NEAR/USDT",    "HBAR/USDT",    "ADA/USDT",    "LINK/USDT",    "SOL/BTC",    "DOT/USDT",    "LTC/USDT",    "AVAX/USDT",    "VET/USDT",    "MATIC/USDT",    "UNI/USDT",    "BNB/BTC",    "XLM/USDT",    "BCH/USDT",    "GALA/USDT",    "SAND/USDT",    "RVN/USDT",    "ONE/USDT",    "ALGO/USDT",    "ETC/USDT",    "KDA/USDT",    "ADA/USDC",    "FTM/USDT",    "ATOM/USDT",    "GRT/USDT",    "CTSI/USDT",    "MATIC/BTC",    "BAT/USDT",    "OP/USDT",    "ZEC/USDT",    "ENJ/USDT",    "IOTA/USDT",    "DGB/USDT",    "QNT/USDT",    "MXC/USDT",    "1INCH/USDT",    "FLOW/USDT",    "CLV/USDT",    "ACH/USDT",    "SUSHI/USDT",    "LTC/BTC",    "BAND/USDT",    "FIL/USDT",    "T/USDT",    "AUDIO/USDT",    "REN/USDT",    "ADX/USDT",    "KAVA/USDT",    "APE/USDT",    "KNC/USDT",    "ANKR/USDT",    "DASH/USDT",    "EOS/USDT",    "CHZ/USDT",    "STORJ/USDT",    "LRC/USDT",    "PROM/USDT",    "LTO/USDT",    "STMX/USDT",    "SNX/USDT",    "COMP/USDT",    "BNT/USDT",    "EGLD/USDT",    "STG/USDT",    "IOST/USDT",    "OGN/USDT",    "GLM/USDT",    "DAI/USDT",    "WBTC/BTC",    "YFI/USDT",    "TLM/USDT",    "LOOM/USDT",    "BAL/USDT",    "VITE/USDT",    "REQ/USDT"]
-']  # Add more pairs as needed
+trading_pairs = [
+    "BTC/USDT", "ETH/USDT", "SOL/USDT", "USDC/USDT", "FET/USDT",
+    "DOGE/USDT", "XRP/USDT", "NEAR/USDT", "HBAR/USDT", "ADA/USDT",
+    "LINK/USDT", "SOL/BTC", "DOT/USDT", "LTC/USDT", "AVAX/USDT",
+    "VET/USDT", "MATIC/USDT", "UNI/USDT", "BNB/BTC", "XLM/USDT",
+    "BCH/USDT", "GALA/USDT", "SAND/USDT", "RVN/USDT", "ONE/USDT",
+    "ALGO/USDT", "ETC/USDT", "KDA/USDT", "ADA/USDC", "FTM/USDT",
+    "ATOM/USDT", "GRT/USDT", "CTSI/USDT", "MATIC/BTC", "BAT/USDT",
+    "OP/USDT", "ZEC/USDT", "ENJ/USDT", "IOTA/USDT", "DGB/USDT",
+    "QNT/USDT", "MXC/USDT", "1INCH/USDT", "FLOW/USDT", "CLV/USDT",
+    "ACH/USDT", "SUSHI/USDT", "LTC/BTC", "BAND/USDT", "FIL/USDT",
+    "T/USDT", "AUDIO/USDT", "REN/USDT", "ADX/USDT", "KAVA/USDT",
+    "APE/USDT", "KNC/USDT", "ANKR/USDT", "DASH/USDT", "EOS/USDT",
+    "CHZ/USDT", "STORJ/USDT", "LRC/USDT", "PROM/USDT", "LTO/USDT",
+    "STMX/USDT", "SNX/USDT", "COMP/USDT", "BNT/USDT", "EGLD/USDT",
+    "STG/USDT", "IOST/USDT", "OGN/USDT", "GLM/USDT", "DAI/USDT",
+    "WBTC/BTC", "YFI/USDT", "TLM/USDT", "LOOM/USDT", "BAL/USDT",
+    "VITE/USDT", "REQ/USDT"
+]
 
 def fetch_prices():
     prices = {}
@@ -32,9 +49,12 @@ def detect_arbitrage(prices):
     arbitrage_opportunities = []
     
     for pair in trading_pairs:
-        binance_price = prices[f"binance_{pair}"]
-        kraken_price = prices[f"kraken_{pair}"]
+        binance_price = prices.get(f"binance_{pair}")
+        kraken_price = prices.get(f"kraken_{pair}")
         
+        if binance_price is None or kraken_price is None:
+            continue
+
         if binance_price < kraken_price:
             profit = kraken_price - binance_price
             arbitrage_opportunities.append(('binance', 'kraken', pair, profit))
